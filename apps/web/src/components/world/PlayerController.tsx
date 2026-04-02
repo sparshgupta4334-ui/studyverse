@@ -38,29 +38,20 @@ export function PlayerController({ onPositionChange }: PlayerControllerProps) {
   const { camera } = useThree();
   const { movementEnabled, setPointerLocked, activePanel } = useWorldStore();
 
-  const handleKeyDown = useCallback((e: KeyboardEvent) => {
-    switch (e.code) {
-      case "KeyW": keys.current.w = true; break;
-      case "KeyA": keys.current.a = true; break;
-      case "KeyS": keys.current.s = true; break;
-      case "KeyD": keys.current.d = true; break;
+  const setKey = useCallback((code: string, value: boolean) => {
+    switch (code) {
+      case "KeyW": keys.current.w = value; break;
+      case "KeyA": keys.current.a = value; break;
+      case "KeyS": keys.current.s = value; break;
+      case "KeyD": keys.current.d = value; break;
       case "ShiftLeft":
       case "ShiftRight":
-        keys.current.shift = true; break;
+        keys.current.shift = value; break;
     }
   }, []);
 
-  const handleKeyUp = useCallback((e: KeyboardEvent) => {
-    switch (e.code) {
-      case "KeyW": keys.current.w = false; break;
-      case "KeyA": keys.current.a = false; break;
-      case "KeyS": keys.current.s = false; break;
-      case "KeyD": keys.current.d = false; break;
-      case "ShiftLeft":
-      case "ShiftRight":
-        keys.current.shift = false; break;
-    }
-  }, []);
+  const handleKeyDown = useCallback((e: KeyboardEvent) => setKey(e.code, true), [setKey]);
+  const handleKeyUp = useCallback((e: KeyboardEvent) => setKey(e.code, false), [setKey]);
 
   const handleMouseMove = useCallback(
     (e: MouseEvent) => {

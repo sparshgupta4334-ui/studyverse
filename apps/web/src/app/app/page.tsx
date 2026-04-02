@@ -3,6 +3,7 @@
 import dynamic from "next/dynamic";
 import { Suspense, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { useRouter } from "next/navigation";
 import {
   Sparkles,
   Users,
@@ -65,6 +66,7 @@ function WorldLoadingScreen() {
 }
 
 export default function AppPage() {
+  const router = useRouter();
   const { activePanel, remotePlayers, isChatOpen, toggleChat, chatMessages } = useWorldStore();
   const [chatInput, setChatInput] = useState("");
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
@@ -133,7 +135,7 @@ export default function AppPage() {
               { icon: Map, label: "World Map", action: () => {} },
               { icon: MessageSquare, label: "Chat", action: toggleChat },
               { icon: Settings, label: "Settings", action: () => {} },
-              { icon: LogOut, label: "Exit", action: () => window.location.href = "/" },
+              { icon: LogOut, label: "Exit", action: () => router.push("/") },
             ].map(({ icon: Icon, label, action }) => (
               <button
                 key={label}

@@ -111,7 +111,8 @@ export function AIChatPanel() {
     <PanelOverlay title="AI Study Assistant" icon="🤖" width="max-w-2xl">
       <div className="flex h-[600px] flex-col">
         {/* Messages */}
-        <div className="flex-1 overflow-y-auto p-4 space-y-4">
+        <div className="flex-1 overflow-y-auto p-4">
+          <div className="flex flex-col gap-4">
           <AnimatePresence initial={false}>
             {messages.map((msg) => (
               <motion.div
@@ -198,6 +199,7 @@ export function AIChatPanel() {
           )}
 
           <div ref={messagesEndRef} />
+          </div>
         </div>
 
         {/* Suggested prompts */}
