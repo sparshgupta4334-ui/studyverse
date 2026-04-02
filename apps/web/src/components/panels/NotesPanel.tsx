@@ -258,7 +258,7 @@ export function NotesPanel() {
                   </pre>
                 </div>
                 <p className="text-xs text-gray-600">
-                  Last updated {selectedNote.updatedAt.toLocaleDateString()}
+                  Last updated {selectedNote.updatedAt.toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric" })}
                 </p>
               </div>
             )

@@ -139,7 +139,7 @@ export function HeroSection() {
               <div className="absolute bottom-6 right-6 rounded-xl border border-white/10 bg-glass px-4 py-3 text-left">
                 <div className="mb-1 text-xs text-gray-500">AI Chat</div>
                 <div className="text-sm text-gray-300">
-                  &ldquo;Explain quantum entanglement...&rdquo;
+                  "Explain quantum entanglement..."
                 </div>
               </div>
             </div>

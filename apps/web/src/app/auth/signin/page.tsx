@@ -107,7 +107,7 @@ export default function SignInPage() {
           </form>
 
           <div className="mt-6 text-center text-sm text-gray-500">
-            Don&apos;t have an account?{" "}
+            {"Don't have an account?"}{" "}
             <Link href="/auth/signup" className="font-medium text-brand-400 hover:text-brand-300">
               Sign up free
             </Link>
