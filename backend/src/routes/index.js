@@ -1,6 +1,7 @@
 'use strict';
 
 const { Router } = require('express');
+const { apiLimiter } = require('../middleware/rateLimiter');
 
 const authRoutes        = require('./auth');
 const customerRoutes    = require('./customers');
@@ -21,6 +22,9 @@ router.get('/health', (req, res) => {
     uptime: process.uptime(),
   });
 });
+
+// Apply the global rate limiter to all API sub-routes
+router.use(apiLimiter);
 
 router.use('/auth',         authRoutes);
 router.use('/customers',    customerRoutes);

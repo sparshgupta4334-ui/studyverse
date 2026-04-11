@@ -1,5 +1,7 @@
 'use strict';
 
+const crypto = require('crypto');
+
 /**
  * Build a paginated response object.
  * Supports both cursor-based and offset-based pagination.
@@ -47,11 +49,12 @@ const sanitizePhone = (phone) => {
 };
 
 /**
- * Generate a unique order ID for Razorpay receipts.
+ * Generate a unique order ID for Razorpay receipts using cryptographically
+ * secure random bytes.
  */
 const generateReceiptId = () => {
   const ts = Date.now().toString(36).toUpperCase();
-  const rand = Math.random().toString(36).substring(2, 7).toUpperCase();
+  const rand = crypto.randomBytes(3).toString('hex').toUpperCase();
   return `RCT-${ts}-${rand}`;
 };
 

@@ -6,7 +6,6 @@ const authController = require('../controllers/authController');
 const { authenticate } = require('../middleware/auth');
 const { validate } = require('../middleware/validate');
 const { authLimiter } = require('../middleware/rateLimiter');
-
 const router = Router();
 
 router.post(
@@ -29,14 +28,15 @@ router.post(
   authController.refreshToken,
 );
 
-router.post('/logout', authController.logout);
+router.post('/logout', authLimiter, authController.logout);
 
-router.post('/logout-all', authenticate, authController.logoutAll);
+router.post('/logout-all', authLimiter, authenticate, authController.logoutAll);
 
-router.get('/me', authenticate, authController.getMe);
+router.get('/me', authLimiter, authenticate, authController.getMe);
 
 router.patch(
   '/me',
+  authLimiter,
   authenticate,
   [
     body('name').optional().isLength({ max: 100 }).trim().escape(),
