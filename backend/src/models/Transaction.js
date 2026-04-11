@@ -7,13 +7,13 @@ const TYPES = Object.freeze({ CREDIT: 'credit', DEBIT: 'debit' });
 const createTable = async () => {
   await query(`
     CREATE TABLE IF NOT EXISTS transactions (
-      id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-      user_id         UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-      customer_id     UUID NOT NULL REFERENCES customers(id) ON DELETE CASCADE,
+      transaction_id  UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+      user_id         UUID NOT NULL REFERENCES users(user_id) ON DELETE CASCADE,
+      customer_id     UUID NOT NULL REFERENCES customers(customer_id) ON DELETE CASCADE,
       type            VARCHAR(10) NOT NULL CHECK (type IN ('credit', 'debit')),
       amount          BIGINT NOT NULL CHECK (amount > 0),  -- paise
-      running_balance BIGINT NOT NULL DEFAULT 0,           -- paise
-      description     TEXT,
+      balance_after   BIGINT NOT NULL DEFAULT 0,           -- paise; running balance snapshot
+      notes           TEXT,
       reference_no    VARCHAR(100),
       payment_id      UUID,
       created_at      TIMESTAMPTZ NOT NULL DEFAULT NOW(),
@@ -55,7 +55,7 @@ const findByCustomer = async ({ customerId, userId, limit, cursor, type }) => {
   if (cursor) {
     const [ts, lastId] = cursor.split(':');
     if (ts && lastId) {
-      conditions.push(`(t.created_at, t.id) < ($${idx++}, $${idx++})`);
+      conditions.push(`(t.created_at, t.transaction_id) < ($${idx++}, $${idx++})`);
       params.push(ts, lastId);
     }
   }
@@ -66,9 +66,9 @@ const findByCustomer = async ({ customerId, userId, limit, cursor, type }) => {
   const res = await query(
     `SELECT t.*, c.name AS customer_name
      FROM transactions t
-     JOIN customers c ON c.id = t.customer_id
+     JOIN customers c ON c.customer_id = t.customer_id
      WHERE ${conditions.join(' AND ')}
-     ORDER BY t.created_at DESC, t.id DESC
+     ORDER BY t.created_at DESC, t.transaction_id DESC
      LIMIT $${idx}`,
     params,
   );
@@ -78,7 +78,7 @@ const findByCustomer = async ({ customerId, userId, limit, cursor, type }) => {
   const data = hasMore ? rows.slice(0, limitVal) : rows;
   const last = data[data.length - 1];
   const nextCursor = hasMore && last
-    ? `${last.created_at.toISOString()}:${last.id}`
+    ? `${last.created_at.toISOString()}:${last.transaction_id}`
     : null;
 
   return { data, hasMore, nextCursor };
@@ -92,7 +92,7 @@ const findAllByUser = async ({ userId, limit, cursor }) => {
   if (cursor) {
     const [ts, lastId] = cursor.split(':');
     if (ts && lastId) {
-      conditions.push(`(t.created_at, t.id) < ($${idx++}, $${idx++})`);
+      conditions.push(`(t.created_at, t.transaction_id) < ($${idx++}, $${idx++})`);
       params.push(ts, lastId);
     }
   }
@@ -103,9 +103,9 @@ const findAllByUser = async ({ userId, limit, cursor }) => {
   const res = await query(
     `SELECT t.*, c.name AS customer_name
      FROM transactions t
-     JOIN customers c ON c.id = t.customer_id
+     JOIN customers c ON c.customer_id = t.customer_id
      WHERE ${conditions.join(' AND ')}
-     ORDER BY t.created_at DESC, t.id DESC
+     ORDER BY t.created_at DESC, t.transaction_id DESC
      LIMIT $${idx}`,
     params,
   );
@@ -115,7 +115,7 @@ const findAllByUser = async ({ userId, limit, cursor }) => {
   const data = hasMore ? rows.slice(0, limitVal) : rows;
   const last = data[data.length - 1];
   const nextCursor = hasMore && last
-    ? `${last.created_at.toISOString()}:${last.id}`
+    ? `${last.created_at.toISOString()}:${last.transaction_id}`
     : null;
 
   return { data, hasMore, nextCursor };
@@ -123,7 +123,7 @@ const findAllByUser = async ({ userId, limit, cursor }) => {
 
 const findById = async (id, userId) => {
   const res = await query(
-    'SELECT * FROM transactions WHERE id = $1 AND user_id = $2',
+    'SELECT * FROM transactions WHERE transaction_id = $1 AND user_id = $2',
     [id, userId],
   );
   return res.rows[0] || null;
@@ -133,13 +133,13 @@ const findById = async (id, userId) => {
  * Insert a transaction and return it.  Balance update must be handled by the
  * controller inside a DB transaction to keep atomicity.
  */
-const create = async (client, { userId, customerId, type, amount, runningBalance, description, referenceNo, paymentId }) => {
+const create = async (client, { userId, customerId, type, amount, balanceAfter, notes, referenceNo, paymentId }) => {
   const res = await client.query(
     `INSERT INTO transactions
-       (user_id, customer_id, type, amount, running_balance, description, reference_no, payment_id)
+       (user_id, customer_id, type, amount, balance_after, notes, reference_no, payment_id)
      VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
      RETURNING *`,
-    [userId, customerId, type, amount, runningBalance, description || null, referenceNo || null, paymentId || null],
+    [userId, customerId, type, amount, balanceAfter, notes || null, referenceNo || null, paymentId || null],
   );
   return res.rows[0];
 };

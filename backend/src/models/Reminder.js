@@ -12,9 +12,9 @@ const STATUSES = Object.freeze({
 const createTable = async () => {
   await query(`
     CREATE TABLE IF NOT EXISTS reminders (
-      id            UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-      user_id       UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-      customer_id   UUID NOT NULL REFERENCES customers(id) ON DELETE CASCADE,
+      reminder_id   UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+      user_id       UUID NOT NULL REFERENCES users(user_id) ON DELETE CASCADE,
+      customer_id   UUID NOT NULL REFERENCES customers(customer_id) ON DELETE CASCADE,
       phone         VARCHAR(20) NOT NULL,
       message       TEXT NOT NULL,
       status        VARCHAR(20) NOT NULL DEFAULT 'pending',
@@ -57,7 +57,7 @@ const create = async ({ userId, customerId, phone, message, scheduledAt }) => {
 
 const findById = async (id, userId) => {
   const res = await query(
-    'SELECT * FROM reminders WHERE id = $1 AND user_id = $2',
+    'SELECT * FROM reminders WHERE reminder_id = $1 AND user_id = $2',
     [id, userId],
   );
   return res.rows[0] || null;
@@ -71,7 +71,7 @@ const findByCustomer = async ({ customerId, userId, limit, cursor }) => {
   if (cursor) {
     const [ts, lastId] = cursor.split(':');
     if (ts && lastId) {
-      conditions.push(`(r.created_at, r.id) < ($${idx++}, $${idx++})`);
+      conditions.push(`(r.created_at, r.reminder_id) < ($${idx++}, $${idx++})`);
       params.push(ts, lastId);
     }
   }
@@ -81,9 +81,9 @@ const findByCustomer = async ({ customerId, userId, limit, cursor }) => {
 
   const res = await query(
     `SELECT r.*, c.name AS customer_name FROM reminders r
-     JOIN customers c ON c.id = r.customer_id
+     JOIN customers c ON c.customer_id = r.customer_id
      WHERE ${conditions.join(' AND ')}
-     ORDER BY r.created_at DESC, r.id DESC
+     ORDER BY r.created_at DESC, r.reminder_id DESC
      LIMIT $${idx}`,
     params,
   );
@@ -93,7 +93,7 @@ const findByCustomer = async ({ customerId, userId, limit, cursor }) => {
   const data = hasMore ? rows.slice(0, limitVal) : rows;
   const last = data[data.length - 1];
   const nextCursor = hasMore && last
-    ? `${last.created_at.toISOString()}:${last.id}`
+    ? `${last.created_at.toISOString()}:${last.reminder_id}`
     : null;
 
   return { data, hasMore, nextCursor };
@@ -107,7 +107,7 @@ const updateStatus = async (id, { status, providerSid, sentAt, errorMessage, pro
        sent_at       = COALESCE($3, sent_at),
        error_message = COALESCE($4, error_message),
        provider      = COALESCE($5, provider)
-     WHERE id = $6
+     WHERE reminder_id = $6
      RETURNING *`,
     [status, providerSid || null, sentAt || null, errorMessage || null, provider || null, id],
   );
@@ -118,8 +118,8 @@ const findPendingDue = async () => {
   const res = await query(
     `SELECT r.*, u.phone AS user_phone, c.name AS customer_name
      FROM reminders r
-     JOIN users u ON u.id = r.user_id
-     JOIN customers c ON c.id = r.customer_id
+     JOIN users u ON u.user_id = r.user_id
+     JOIN customers c ON c.customer_id = r.customer_id
      WHERE r.status = 'pending' AND r.scheduled_at <= NOW()
      ORDER BY r.scheduled_at ASC
      LIMIT 100`,

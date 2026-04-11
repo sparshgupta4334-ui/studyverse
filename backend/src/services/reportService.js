@@ -46,7 +46,7 @@ const getSummaryData = async (userId, startDate, endDate) => {
  */
 const getTopDebtors = async (userId, limit = 10) => {
   const res = await query(
-    `SELECT id, name, phone, balance
+    `SELECT customer_id, name, phone, balance
      FROM customers
      WHERE user_id = $1 AND is_active = TRUE AND balance < 0
      ORDER BY balance ASC
@@ -65,7 +65,7 @@ const generatePDF = async ({ userId, userName, businessName, startDate, endDate,
     query(
       `SELECT t.*, c.name AS customer_name
        FROM transactions t
-       JOIN customers c ON c.id = t.customer_id
+       JOIN customers c ON c.customer_id = t.customer_id
        WHERE t.user_id = $1
          AND t.created_at >= $2
          AND t.created_at <  $3

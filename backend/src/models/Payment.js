@@ -12,9 +12,9 @@ const STATUSES = Object.freeze({
 const createTable = async () => {
   await query(`
     CREATE TABLE IF NOT EXISTS payments (
-      id                  UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-      user_id             UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-      customer_id         UUID NOT NULL REFERENCES customers(id) ON DELETE CASCADE,
+      payment_id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+      user_id             UUID NOT NULL REFERENCES users(user_id) ON DELETE CASCADE,
+      customer_id         UUID NOT NULL REFERENCES customers(customer_id) ON DELETE CASCADE,
       razorpay_order_id   VARCHAR(100) UNIQUE,
       razorpay_payment_id VARCHAR(100),
       razorpay_signature  VARCHAR(256),
@@ -59,7 +59,7 @@ const create = async ({ userId, customerId, razorpayOrderId, amount, currency, r
 
 const findById = async (id, userId) => {
   const res = await query(
-    'SELECT * FROM payments WHERE id = $1 AND user_id = $2',
+    'SELECT * FROM payments WHERE payment_id = $1 AND user_id = $2',
     [id, userId],
   );
   return res.rows[0] || null;
@@ -81,7 +81,7 @@ const findByCustomer = async ({ customerId, userId, limit, cursor }) => {
   if (cursor) {
     const [ts, lastId] = cursor.split(':');
     if (ts && lastId) {
-      conditions.push(`(p.created_at, p.id) < ($${idx++}, $${idx++})`);
+      conditions.push(`(p.created_at, p.payment_id) < ($${idx++}, $${idx++})`);
       params.push(ts, lastId);
     }
   }
@@ -92,7 +92,7 @@ const findByCustomer = async ({ customerId, userId, limit, cursor }) => {
   const res = await query(
     `SELECT p.* FROM payments p
      WHERE ${conditions.join(' AND ')}
-     ORDER BY p.created_at DESC, p.id DESC
+     ORDER BY p.created_at DESC, p.payment_id DESC
      LIMIT $${idx}`,
     params,
   );
@@ -102,7 +102,7 @@ const findByCustomer = async ({ customerId, userId, limit, cursor }) => {
   const data = hasMore ? rows.slice(0, limitVal) : rows;
   const last = data[data.length - 1];
   const nextCursor = hasMore && last
-    ? `${last.created_at.toISOString()}:${last.id}`
+    ? `${last.created_at.toISOString()}:${last.payment_id}`
     : null;
 
   return { data, hasMore, nextCursor };

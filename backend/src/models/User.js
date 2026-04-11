@@ -9,16 +9,18 @@ const { query, withTransaction } = require('../config/database');
 const createTable = async () => {
   await query(`
     CREATE TABLE IF NOT EXISTS users (
-      id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-      phone       VARCHAR(20)  UNIQUE NOT NULL,
-      name        VARCHAR(100),
-      email       VARCHAR(255),
+      user_id       UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+      phone         VARCHAR(20)  UNIQUE NOT NULL,
+      name          VARCHAR(255) NOT NULL,
+      email         VARCHAR(255),
       business_name VARCHAR(150),
-      avatar_url  TEXT,
-      is_active   BOOLEAN      NOT NULL DEFAULT TRUE,
-      last_login  TIMESTAMPTZ,
-      created_at  TIMESTAMPTZ  NOT NULL DEFAULT NOW(),
-      updated_at  TIMESTAMPTZ  NOT NULL DEFAULT NOW()
+      avatar_url    TEXT,
+      device_tokens JSONB        NOT NULL DEFAULT '[]'::JSONB,
+      refresh_token TEXT,
+      is_active     BOOLEAN      NOT NULL DEFAULT TRUE,
+      last_login    TIMESTAMPTZ,
+      created_at    TIMESTAMPTZ  NOT NULL DEFAULT NOW(),
+      updated_at    TIMESTAMPTZ  NOT NULL DEFAULT NOW()
     );
 
     CREATE INDEX IF NOT EXISTS idx_users_phone ON users(phone);
@@ -44,7 +46,7 @@ const createTable = async () => {
 
     CREATE TABLE IF NOT EXISTS refresh_tokens (
       id         UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-      user_id    UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      user_id    UUID NOT NULL REFERENCES users(user_id) ON DELETE CASCADE,
       token_hash VARCHAR(256) NOT NULL,
       expires_at TIMESTAMPTZ  NOT NULL,
       revoked    BOOLEAN      NOT NULL DEFAULT FALSE,
@@ -57,7 +59,7 @@ const createTable = async () => {
 };
 
 const findById = async (id) => {
-  const res = await query('SELECT * FROM users WHERE id = $1', [id]);
+  const res = await query('SELECT * FROM users WHERE user_id = $1', [id]);
   return res.rows[0] || null;
 };
 
@@ -97,7 +99,7 @@ const update = async (id, fields) => {
   values.push(id);
 
   const res = await query(
-    `UPDATE users SET ${updates.join(', ')} WHERE id = $${idx} RETURNING *`,
+    `UPDATE users SET ${updates.join(', ')} WHERE user_id = $${idx} RETURNING *`,
     values,
   );
   return res.rows[0] || null;

@@ -5,8 +5,8 @@ const { query } = require('../config/database');
 const createTable = async () => {
   await query(`
     CREATE TABLE IF NOT EXISTS customers (
-      id           UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-      user_id      UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      customer_id  UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+      user_id      UUID NOT NULL REFERENCES users(user_id) ON DELETE CASCADE,
       name         VARCHAR(150) NOT NULL,
       phone        VARCHAR(20),
       email        VARCHAR(255),
@@ -54,7 +54,7 @@ const findAll = async ({ userId, search, limit, cursor, isActive }) => {
   }
 
   if (cursor) {
-    conditions.push(`c.id > $${idx++}`);
+    conditions.push(`c.customer_id > $${idx++}`);
     params.push(cursor);
   }
 
@@ -64,10 +64,10 @@ const findAll = async ({ userId, search, limit, cursor, isActive }) => {
 
   const res = await query(
     `SELECT c.*, 
-            (SELECT COUNT(*) FROM transactions t WHERE t.customer_id = c.id) AS transaction_count
+            (SELECT COUNT(*) FROM transactions t WHERE t.customer_id = c.customer_id) AS transaction_count
      FROM customers c
      WHERE ${where}
-     ORDER BY c.name ASC, c.id ASC
+     ORDER BY c.name ASC, c.customer_id ASC
      LIMIT $${idx}`,
     params,
   );
@@ -75,14 +75,14 @@ const findAll = async ({ userId, search, limit, cursor, isActive }) => {
   const rows = res.rows;
   const hasMore = rows.length > limitVal;
   const data = hasMore ? rows.slice(0, limitVal) : rows;
-  const nextCursor = hasMore ? data[data.length - 1].id : null;
+  const nextCursor = hasMore ? data[data.length - 1].customer_id : null;
 
   return { data, hasMore, nextCursor };
 };
 
 const findById = async (id, userId) => {
   const res = await query(
-    'SELECT * FROM customers WHERE id = $1 AND user_id = $2',
+    'SELECT * FROM customers WHERE customer_id = $1 AND user_id = $2',
     [id, userId],
   );
   return res.rows[0] || null;
@@ -116,7 +116,7 @@ const update = async (id, userId, fields) => {
 
   const res = await query(
     `UPDATE customers SET ${updates.join(', ')}
-     WHERE id = $${idx} AND user_id = $${idx + 1}
+     WHERE customer_id = $${idx} AND user_id = $${idx + 1}
      RETURNING *`,
     values,
   );
@@ -126,8 +126,8 @@ const update = async (id, userId, fields) => {
 const remove = async (id, userId) => {
   const res = await query(
     `UPDATE customers SET is_active = FALSE
-     WHERE id = $1 AND user_id = $2
-     RETURNING id`,
+     WHERE customer_id = $1 AND user_id = $2
+     RETURNING customer_id`,
     [id, userId],
   );
   return res.rows[0] || null;
@@ -136,7 +136,7 @@ const remove = async (id, userId) => {
 const updateBalance = async (client, customerId, delta) => {
   const res = await client.query(
     `UPDATE customers SET balance = balance + $1
-     WHERE id = $2
+     WHERE customer_id = $2
      RETURNING balance`,
     [delta, customerId],
   );

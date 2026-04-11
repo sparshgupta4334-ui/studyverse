@@ -114,10 +114,10 @@ const verifyPayment = async (req, res, next) => {
         customerId: existingPayment.customer_id,
         type: 'credit',
         amount: p.amount,
-        runningBalance: newBalance,
-        description: `Payment received via ${rpPayment.method || 'UPI'} – ${razorpay_payment_id}`,
+        balanceAfter: newBalance,
+        notes: `Payment received via ${rpPayment.method || 'UPI'} – ${razorpay_payment_id}`,
         referenceNo: razorpay_payment_id,
-        paymentId: p.id,
+        paymentId: p.payment_id,
       });
 
       return p;

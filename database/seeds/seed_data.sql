@@ -263,7 +263,7 @@ VALUES
     ('40000000-0000-0000-0000-000000000002',
      '10000000-0000-0000-0000-000000000005',
      '00000000-0000-0000-0000-000000000002',
-     'Dear Farhan, your account shows a balance of ₹120.00 outstanding. Please contact us. — Priya',
+     'Dear Farhan, we have recorded an advance of ₹120.00 from your account. Please contact us to confirm. — Priya',
      NOW() - INTERVAL '3 days', 'sent', 'undelivered', '+919000000005'),
 
     ('40000000-0000-0000-0000-000000000003',
