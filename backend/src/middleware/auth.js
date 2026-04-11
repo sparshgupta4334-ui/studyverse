@@ -33,7 +33,7 @@ const authenticate = async (req, res, next) => {
 
     // Verify the user still exists and is active
     const result = await query(
-      'SELECT id, phone, name, is_active FROM users WHERE id = $1',
+      'SELECT user_id, phone, name, is_active FROM users WHERE user_id = $1',
       [decoded.sub],
     );
 
@@ -45,7 +45,7 @@ const authenticate = async (req, res, next) => {
     }
 
     req.user = {
-      id: result.rows[0].id,
+      id: result.rows[0].user_id,
       phone: result.rows[0].phone,
       name: result.rows[0].name,
     };
@@ -69,10 +69,10 @@ const optionalAuthenticate = async (req, res, next) => {
     const token = authHeader.split(' ')[1];
     const decoded = jwt.verify(token, process.env.JWT_ACCESS_SECRET);
     const result = await query(
-      'SELECT id, phone, name FROM users WHERE id = $1 AND is_active = TRUE',
+      'SELECT user_id, phone, name FROM users WHERE user_id = $1 AND is_active = TRUE',
       [decoded.sub],
     );
-    if (result.rows.length) req.user = result.rows[0];
+    if (result.rows.length) req.user = { ...result.rows[0], id: result.rows[0].user_id };
   } catch {
     // Ignore errors – treat as unauthenticated
   }

@@ -51,7 +51,7 @@ const listByCustomer = async (req, res, next) => {
 
     res.json({
       success: true,
-      customer: { id: customer.id, name: customer.name, balance: customer.balance },
+      customer: { id: customer.customer_id, name: customer.name, balance: customer.balance },
       ...paginate({ data, total: data.length, limit: parseInt(limit, 10), offset: 0, nextCursor }),
     });
   } catch (err) {
@@ -102,13 +102,13 @@ const createTransaction = async (req, res, next) => {
         customerId,
         type,
         amount: amountPaise,
-        runningBalance: newBalance,
-        description,
+        balanceAfter: newBalance,
+        notes: description,
         referenceNo,
       });
     });
 
-    logger.info('Transaction created', { userId: req.user.id, txId: tx.id, type, amount: amountPaise });
+    logger.info('Transaction created', { userId: req.user.id, txId: tx.transaction_id, type, amount: amountPaise });
     res.status(201).json({ success: true, message: 'Transaction recorded', data: tx });
   } catch (err) {
     next(err);

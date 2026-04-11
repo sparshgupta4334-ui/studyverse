@@ -118,12 +118,12 @@ const push = async (req, res, next) => {
               customerId: t.customer_id,
               type: t.type,
               amount: amountPaise,
-              runningBalance: newBalance,
-              description: t.description,
+              balanceAfter: newBalance,
+              notes: t.notes,
               referenceNo: t.reference_no,
             });
           });
-          results.transactions.push({ id: tx.id, synced: true });
+          results.transactions.push({ id: tx.transaction_id, synced: true });
         } else {
           results.transactions.push({ id: t.id, synced: true, skipped: true });
         }

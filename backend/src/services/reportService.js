@@ -144,7 +144,7 @@ const generatePDF = async ({ userId, userName, businessName, startDate, endDate,
     doc.text(tx.customer_name || '-', cols.customer, y, { width: 160 });
     doc.fillColor(tx.type === 'credit' ? 'green' : 'red').text(tx.type.toUpperCase(), cols.type, y, { width: 55 });
     doc.fillColor('black').text(formatCurrency(tx.amount), cols.amount, y, { width: 85 });
-    doc.text(formatCurrency(tx.running_balance), cols.balance, y, { width: 85 });
+    doc.text(formatCurrency(tx.balance_after), cols.balance, y, { width: 85 });
     y += 14;
   }
 

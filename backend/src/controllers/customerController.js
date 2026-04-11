@@ -73,7 +73,7 @@ const createCustomer = async (req, res, next) => {
       notes,
     });
 
-    logger.info('Customer created', { userId: req.user.id, customerId: customer.id });
+    logger.info('Customer created', { userId: req.user.id, customerId: customer.customer_id });
     res.status(201).json({ success: true, message: 'Customer created', data: customer });
   } catch (err) {
     next(err);
