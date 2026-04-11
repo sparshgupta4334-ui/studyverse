@@ -101,7 +101,7 @@ const generatePDF = async ({ userId, userName, businessName, startDate, endDate,
   doc.font('Helvetica').fontSize(10);
   doc.text(`Total Customers: ${summaryData.totalCustomers}`);
   doc.text(`Total Credit: ${formatCurrency(summaryData.credit.total)} (${summaryData.credit.count} entries)`);
-  doc.text(`Total Debit:  ${formatCurrency(summaryData.debit.total)} (${summaryData.debit.count} entries)`);
+  doc.text(`Total Debit: ${formatCurrency(summaryData.debit.total)} (${summaryData.debit.count} entries)`);
   doc.text(`Net Balance:  ${formatCurrency(summaryData.netBalance)}`);
   doc.moveDown();
 
