@@ -1,1 +1,208 @@
-backend/node_modules/
+# ══════════════════════════════════════════════════════════════
+# KhataBook Pro — .gitignore
+# Covers: Node.js, Flutter/Dart, PostgreSQL, Docker, IDE, OS
+# ══════════════════════════════════════════════════════════════
+
+# ─────────────────────────────────────────────
+# Node.js / Backend
+# ─────────────────────────────────────────────
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+.pnpm-store/
+package-lock.json.bak
+
+# Build output
+dist/
+build/
+out/
+
+# Environment / secrets — NEVER commit these
+.env
+.env.*
+!.env.example
+!.env.test
+
+# PM2
+.pm2/
+
+# Coverage & test artifacts
+coverage/
+.nyc_output/
+*.lcov
+junit.xml
+
+# TypeScript
+*.tsbuildinfo
+
+# Logs
+logs/
+*.log
+*.log.*
+
+# ─────────────────────────────────────────────
+# Flutter / Dart
+# ─────────────────────────────────────────────
+# Flutter tool cache
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+.pub-cache/
+.pub/
+
+# Flutter build outputs
+frontend/build/
+frontend/.dart_tool/
+
+# iOS
+frontend/ios/Pods/
+frontend/ios/.symlinks/
+frontend/ios/Flutter/Flutter.framework
+frontend/ios/Flutter/Flutter.podspec
+frontend/ios/Flutter/app.flx
+frontend/ios/Flutter/app.zip
+frontend/ios/Flutter/flutter_assets/
+frontend/ios/ServiceDefinitions.json
+frontend/ios/Runner/GeneratedPluginRegistrant.*
+
+# Android
+frontend/android/.gradle/
+frontend/android/captures/
+frontend/android/gradlew
+frontend/android/gradlew.bat
+frontend/android/local.properties
+frontend/android/**/GeneratedPluginRegistrant.java
+frontend/android/key.properties
+*.jks
+*.keystore
+
+# Web
+frontend/web/flutter_service_worker.js
+
+# Generated files
+*.g.dart
+*.freezed.dart
+*.gr.dart
+
+# ─────────────────────────────────────────────
+# Database
+# ─────────────────────────────────────────────
+*.dump
+*.sql.gz
+*.sql.bz2
+*.pgdump
+*.bak
+
+# Local Postgres data directory (if running Postgres directly)
+postgres-data/
+pgdata/
+
+# ─────────────────────────────────────────────
+# Docker
+# ─────────────────────────────────────────────
+# Named Docker volumes mounted locally
+docker-volumes/
+.docker/
+
+# ─────────────────────────────────────────────
+# IDE — JetBrains (Android Studio, IntelliJ, WebStorm)
+# ─────────────────────────────────────────────
+.idea/
+*.iml
+*.iws
+*.ipr
+.idea_modules/
+
+# ─────────────────────────────────────────────
+# IDE — VS Code
+# Keep extensions.json and launch.json for team sharing;
+# ignore personal/local settings.
+# ─────────────────────────────────────────────
+.vscode/*
+!.vscode/extensions.json
+!.vscode/launch.json
+!.vscode/tasks.json
+
+# ─────────────────────────────────────────────
+# IDE — Xcode
+# ─────────────────────────────────────────────
+*.xcworkspace/xcuserdata/
+*.xcodeproj/xcuserdata/
+*.xcodeproj/project.xcworkspace/xcuserdata/
+DerivedData/
+*.moved-aside
+*.pbxuser
+!default.pbxuser
+*.mode1v3
+!default.mode1v3
+*.mode2v3
+!default.mode2v3
+*.perspectivev3
+!default.perspectivev3
+xcuserdata/
+
+# ─────────────────────────────────────────────
+# macOS
+# ─────────────────────────────────────────────
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+.Spotlight-V100
+.Trashes
+.AppleDB
+.AppleDesktop
+Network Trash Folder
+Temporary Items
+.apdisk
+
+# ─────────────────────────────────────────────
+# Windows
+# ─────────────────────────────────────────────
+Thumbs.db
+Thumbs.db:encryptable
+ehthumbs.db
+ehthumbs_vista.db
+*.stackdump
+[Dd]esktop.ini
+$RECYCLE.BIN/
+*.cab
+*.msi
+*.msix
+*.msm
+*.msp
+*.lnk
+
+# ─────────────────────────────────────────────
+# Linux
+# ─────────────────────────────────────────────
+*~
+.fuse_hidden*
+.directory
+.Trash-*
+.nfs*
+
+# ─────────────────────────────────────────────
+# Certificates & secrets (belt-and-suspenders)
+# ─────────────────────────────────────────────
+*.pem
+*.key
+*.p12
+*.pfx
+*.cert
+*.crt
+service-account*.json
+google-services.json
+GoogleService-Info.plist
+
+# ─────────────────────────────────────────────
+# Miscellaneous
+# ─────────────────────────────────────────────
+*.swp
+*.swo
+.cache/
+.temp/
+tmp/
+temp/

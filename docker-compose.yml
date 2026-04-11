@@ -1,0 +1,180 @@
+# KhataBook Pro — Local Development Environment
+# Services: PostgreSQL 16, Redis 7, Node.js backend (hot-reload), pgAdmin 4
+#
+# Usage:
+#   docker compose up -d              # start everything
+#   docker compose up -d db redis     # start only infrastructure
+#   docker compose logs -f backend    # follow backend logs
+#   docker compose down               # stop (keep volumes)
+#   docker compose down -v            # stop and delete volumes
+
+services:
+
+  # ─────────────────────────────────────────────
+  # PostgreSQL 16 — primary database
+  # ─────────────────────────────────────────────
+  db:
+    image: postgres:16-alpine
+    container_name: khata_db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${DB_NAME:-khatabook}
+      POSTGRES_USER: ${DB_USER:-khata_user}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-khata_password}
+      PGDATA: /var/lib/postgresql/data/pgdata
+    ports:
+      - "${DB_PORT:-5432}:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      # Auto-run all migration files on first start (alphabetical order)
+      - ./database/migrations:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-khata_user} -d ${DB_NAME:-khatabook}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    networks:
+      - khata_net
+
+  # ─────────────────────────────────────────────
+  # Redis 7 — session cache & job queue
+  # ─────────────────────────────────────────────
+  redis:
+    image: redis:7-alpine
+    container_name: khata_redis
+    restart: unless-stopped
+    command: >
+      redis-server
+      --requirepass ${REDIS_PASSWORD:-redis_dev_password}
+      --maxmemory 256mb
+      --maxmemory-policy allkeys-lru
+      --save 60 1
+      --loglevel warning
+    ports:
+      - "${REDIS_PORT:-6379}:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "-a", "${REDIS_PASSWORD:-redis_dev_password}", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    networks:
+      - khata_net
+
+  # ─────────────────────────────────────────────
+  # Node.js backend — hot-reload via nodemon
+  # ─────────────────────────────────────────────
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile.dev
+      # Falls back to a generic Node image when Dockerfile.dev is absent
+    image: khata_backend_dev
+    container_name: khata_backend
+    restart: unless-stopped
+    working_dir: /app
+    # Mount source for hot-reload; node_modules lives inside the container
+    volumes:
+      - ./backend:/app
+      - /app/node_modules
+    ports:
+      - "${PORT:-3000}:3000"
+    environment:
+      NODE_ENV: development
+      PORT: 3000
+
+      # Database
+      DB_HOST: db
+      DB_PORT: 5432
+      DB_NAME: ${DB_NAME:-khatabook}
+      DB_USER: ${DB_USER:-khata_user}
+      DB_PASSWORD: ${DB_PASSWORD:-khata_password}
+
+      # Redis — use auth token in URL
+      REDIS_URL: redis://:${REDIS_PASSWORD:-redis_dev_password}@redis:6379
+
+      # JWT
+      JWT_SECRET: ${JWT_SECRET:-dev-jwt-secret-change-in-production-min-32-chars}
+      JWT_EXPIRES_IN: ${JWT_EXPIRES_IN:-7d}
+      JWT_REFRESH_EXPIRES_IN: ${JWT_REFRESH_EXPIRES_IN:-30d}
+
+      # Firebase Admin SDK
+      FIREBASE_PROJECT_ID: ${FIREBASE_PROJECT_ID:-}
+      FIREBASE_PRIVATE_KEY: ${FIREBASE_PRIVATE_KEY:-}
+      FIREBASE_CLIENT_EMAIL: ${FIREBASE_CLIENT_EMAIL:-}
+
+      # Razorpay
+      RAZORPAY_KEY_ID: ${RAZORPAY_KEY_ID:-}
+      RAZORPAY_KEY_SECRET: ${RAZORPAY_KEY_SECRET:-}
+
+      # Twilio
+      TWILIO_ACCOUNT_SID: ${TWILIO_ACCOUNT_SID:-}
+      TWILIO_AUTH_TOKEN: ${TWILIO_AUTH_TOKEN:-}
+      TWILIO_PHONE_NUMBER: ${TWILIO_PHONE_NUMBER:-}
+
+      # CORS — allow frontend dev server
+      ALLOWED_ORIGINS: http://localhost:3000,http://localhost:8080
+
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fs http://localhost:3000/health || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    networks:
+      - khata_net
+
+  # ─────────────────────────────────────────────
+  # pgAdmin 4 — optional database management UI
+  # Access: http://localhost:5050
+  # Login: admin@khata.local / admin (override via env)
+  #
+  # To enable:  docker compose --profile tools up -d
+  # ─────────────────────────────────────────────
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    container_name: khata_pgadmin
+    restart: unless-stopped
+    profiles:
+      - tools
+    environment:
+      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_EMAIL:-admin@khata.local}
+      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_PASSWORD:-admin}
+      PGADMIN_CONFIG_SERVER_MODE: "False"
+      PGADMIN_CONFIG_MASTER_PASSWORD_REQUIRED: "False"
+    ports:
+      - "${PGADMIN_PORT:-5050}:80"
+    volumes:
+      - pgadmin_data:/var/lib/pgadmin
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - khata_net
+
+# ─────────────────────────────────────────────
+# Named volumes — persist data across restarts
+# ─────────────────────────────────────────────
+volumes:
+  postgres_data:
+    name: khata_postgres_data
+  redis_data:
+    name: khata_redis_data
+  pgadmin_data:
+    name: khata_pgadmin_data
+
+# ─────────────────────────────────────────────
+# Internal bridge network
+# ─────────────────────────────────────────────
+networks:
+  khata_net:
+    name: khata_network
+    driver: bridge
