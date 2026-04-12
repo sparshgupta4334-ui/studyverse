@@ -1,5 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import { query } from '../config/database';
+import { sendSMS } from '../config/twilio';
 
 interface CustomerRow {
   customer_id: string;
@@ -8,19 +9,6 @@ interface CustomerRow {
   phone: string | null;
   balance: number;
 }
-
-const sendSMS = async (to: string, body: string): Promise<void> => {
-  const { TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN, TWILIO_PHONE_NUMBER } =
-    process.env;
-  if (!TWILIO_ACCOUNT_SID || !TWILIO_AUTH_TOKEN || !TWILIO_PHONE_NUMBER) {
-    console.log(`[DEV] SMS to ${to}: ${body}`);
-    return;
-  }
-  const twilio = require('twilio')(TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN) as {
-    messages: { create: (opts: Record<string, string>) => Promise<unknown> };
-  };
-  await twilio.messages.create({ body, from: TWILIO_PHONE_NUMBER, to });
-};
 
 export const sendReminder = async (
   req: Request,

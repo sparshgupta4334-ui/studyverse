@@ -1,6 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
 import { query } from '../config/database';
 import PDFDocument from 'pdfkit';
+import { Parser as CsvParser } from 'json2csv';
 
 interface StatsRow {
   total_customers: string;
@@ -130,10 +131,7 @@ export const generateReport = async (
     const rows = result.rows;
 
     if (format === 'csv') {
-      const { Parser } = require('json2csv') as {
-        Parser: new (opts: { fields: string[] }) => { parse: (data: unknown) => string };
-      };
-      const parser = new Parser({
+      const parser = new CsvParser({
         fields: ['transaction_id', 'customer_name', 'amount', 'type', 'notes', 'category', 'balance_after', 'created_at'],
       });
       const csv = parser.parse(rows);

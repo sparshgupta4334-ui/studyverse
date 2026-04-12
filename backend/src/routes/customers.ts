@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { body } from 'express-validator';
+import { body, param } from 'express-validator';
 import {
   getCustomers,
   getCustomer,
@@ -15,7 +15,7 @@ const router = Router();
 router.use(authenticate);
 
 router.get('/', getCustomers);
-router.get('/:id', getCustomer);
+router.get('/:id', [param('id').isUUID().withMessage('Valid customer id required')], validate, getCustomer);
 
 router.post(
   '/',
@@ -26,11 +26,19 @@ router.post(
 
 router.put(
   '/:id',
-  [body('name').optional().trim().notEmpty().withMessage('Name cannot be empty')],
+  [
+    param('id').isUUID().withMessage('Valid customer id required'),
+    body('name').optional().trim().notEmpty().withMessage('Name cannot be empty'),
+  ],
   validate,
   updateCustomer
 );
 
-router.delete('/:id', deleteCustomer);
+router.delete(
+  '/:id',
+  [param('id').isUUID().withMessage('Valid customer id required')],
+  validate,
+  deleteCustomer
+);
 
 export default router;

@@ -2,6 +2,7 @@ import { Request, Response, NextFunction } from 'express';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import { query } from '../config/database';
+import { sendSMS } from '../config/twilio';
 
 const SALT_ROUNDS = 12;
 
@@ -131,21 +132,10 @@ export const sendOTP = async (
 
     // Twilio SMS integration (non-blocking; log on failure)
     try {
-      const { TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN, TWILIO_PHONE_NUMBER } =
-        process.env;
-      if (TWILIO_ACCOUNT_SID && TWILIO_AUTH_TOKEN && TWILIO_PHONE_NUMBER) {
-        const twilio = require('twilio')(TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN) as {
-          messages: { create: (opts: Record<string, string>) => Promise<unknown> };
-        };
-        await twilio.messages.create({
-          body: `Your Gupta Paper Stores OTP is: ${otp}. Valid for 10 minutes.`,
-          from: TWILIO_PHONE_NUMBER,
-          to: phone,
-        });
-      } else {
-        // Development: log OTP to console
-        console.log(`[DEV] OTP for ${phone}: ${otp}`);
-      }
+      await sendSMS(
+        phone,
+        `Your Gupta Paper Stores OTP is: ${otp}. Valid for 10 minutes.`
+      );
     } catch (smsErr) {
       console.error('SMS send error:', smsErr);
     }

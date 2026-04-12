@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { body } from 'express-validator';
+import { body, param } from 'express-validator';
 import {
   getTransactions,
   createTransaction,
@@ -30,7 +30,22 @@ router.post(
   createTransaction
 );
 
-router.put('/:id', updateTransaction);
-router.delete('/:id', deleteTransaction);
+router.put(
+  '/:id',
+  [
+    param('id').isUUID().withMessage('Valid transaction id required'),
+    body('notes').optional().isString(),
+    body('category').optional().isString(),
+  ],
+  validate,
+  updateTransaction
+);
+
+router.delete(
+  '/:id',
+  [param('id').isUUID().withMessage('Valid transaction id required')],
+  validate,
+  deleteTransaction
+);
 
 export default router;
