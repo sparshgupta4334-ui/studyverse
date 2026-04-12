@@ -27,9 +27,13 @@ export default function PaymentsPage() {
   const [showModal, setShowModal] = useState(false);
   const [form, setForm] = useState({ customerId: '', amount: '', method: 'UPI' as Payment['method'], upiId: '', reference: '', date: new Date().toISOString().split('T')[0] });
 
+  const now = new Date();
+  const currentMonthPrefix = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+  const currentMonthLabel = now.toLocaleString('default', { month: 'long', year: 'numeric' });
+
   const totalCollected = paymentList.filter((p) => p.status === 'completed').reduce((s, p) => s + p.amount, 0);
   const totalPending = paymentList.filter((p) => p.status === 'pending').reduce((s, p) => s + p.amount, 0);
-  const thisMonth = paymentList.filter((p) => p.status === 'completed' && p.date.startsWith('2024-01')).reduce((s, p) => s + p.amount, 0);
+  const thisMonth = paymentList.filter((p) => p.status === 'completed' && p.date.startsWith(currentMonthPrefix)).reduce((s, p) => s + p.amount, 0);
 
   const handleSave = () => {
     if (!form.customerId || !form.amount) return;
@@ -90,7 +94,7 @@ export default function PaymentsPage() {
             <p className="text-sm text-blue-700 font-medium">This Month</p>
           </div>
           <p className="text-2xl font-bold text-blue-800">{formatCurrency(thisMonth)}</p>
-          <p className="text-xs text-blue-600 mt-1">January 2024</p>
+          <p className="text-xs text-blue-600 mt-1">{currentMonthLabel}</p>
         </div>
       </div>
 
