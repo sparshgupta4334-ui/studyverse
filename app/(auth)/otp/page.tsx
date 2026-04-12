@@ -1,11 +1,11 @@
 'use client';
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { BookOpen } from 'lucide-react';
 import { authApi } from '@/lib/api';
 import { saveToken, saveUser } from '@/lib/auth';
 
-export default function OTPPage() {
+function OTPContent() {
   const router = useRouter();
   const params = useSearchParams();
   const phone = params.get('phone') || '';
@@ -119,5 +119,13 @@ export default function OTPPage() {
         </p>
       </div>
     </div>
+  );
+}
+
+export default function OTPPage() {
+  return (
+    <Suspense>
+      <OTPContent />
+    </Suspense>
   );
 }

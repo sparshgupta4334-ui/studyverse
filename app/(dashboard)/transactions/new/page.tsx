@@ -1,5 +1,5 @@
 'use client';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, Suspense } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -18,7 +18,7 @@ const schema = z.object({
 });
 type FormData = z.infer<typeof schema>;
 
-export default function NewTransactionPage() {
+function NewTransactionContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const prefillCustomer = searchParams.get('customer_id') || '';
@@ -125,5 +125,13 @@ export default function NewTransactionPage() {
         </form>
       </div>
     </div>
+  );
+}
+
+export default function NewTransactionPage() {
+  return (
+    <Suspense>
+      <NewTransactionContent />
+    </Suspense>
   );
 }
