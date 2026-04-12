@@ -12,16 +12,22 @@ import { sampleTestimonials, stats } from '@/lib/sample-data';
 function CounterNumber({ end, duration = 2000, prefix = '', suffix = '' }: { end: number; duration?: number; prefix?: string; suffix?: string }) {
   const [count, setCount] = useState(0);
   const [started, setStarted] = useState(false);
+  const startedRef = useRef(false);
   const ref = useRef<HTMLSpanElement>(null);
 
   useEffect(() => {
     const observer = new IntersectionObserver(
-      ([entry]) => { if (entry.isIntersecting && !started) setStarted(true); },
+      ([entry]) => {
+        if (entry.isIntersecting && !startedRef.current) {
+          startedRef.current = true;
+          setStarted(true);
+        }
+      },
       { threshold: 0.5 }
     );
     if (ref.current) observer.observe(ref.current);
     return () => observer.disconnect();
-  }, [started]);
+  }, []);
 
   useEffect(() => {
     if (!started) return;

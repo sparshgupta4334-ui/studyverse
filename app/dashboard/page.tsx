@@ -35,9 +35,18 @@ export default function DashboardPage() {
       c.city.toLowerCase().includes(search.toLowerCase())
     );
     if (filterType !== 'all') data = data.filter(c => c.type === filterType);
+
+    const getSortValue = (c: typeof sampleCustomers[0]) => {
+      switch (sortBy) {
+        case 'name': return c.name;
+        case 'balance': return Math.abs(c.balance);
+        default: return c.lastTransaction;
+      }
+    };
+
     data.sort((a, b) => {
-      const valA = sortBy === 'name' ? a.name : sortBy === 'balance' ? Math.abs(a.balance) : a.lastTransaction;
-      const valB = sortBy === 'name' ? b.name : sortBy === 'balance' ? Math.abs(b.balance) : b.lastTransaction;
+      const valA = getSortValue(a);
+      const valB = getSortValue(b);
       if (typeof valA === 'string') return sortDir === 'asc' ? valA.localeCompare(valB as string) : (valB as string).localeCompare(valA);
       return sortDir === 'asc' ? valA - (valB as number) : (valB as number) - valA;
     });
